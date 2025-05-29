@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nederlandse Woordklok</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .clock-container {
+            background-color: #111;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #333;
+            /* Remove max-width and max-height constraints */
+            width: min(90vw, 90vh);
+            height: min(90vw, 90vh);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: min(1vw, 1vh);
+            font-weight: bold;
+            justify-content: center;
+            /* Add gray border around the 12x12 grid - 2 character widths */
+            border: calc(min(90vw, 90vh) / 12) solid #111;
+            /* Make grid square and centered */
+            width: calc(min(90vw, 90vh) * 0.9);
+            height: calc(min(90vw, 90vh) * 0.9);
+            margin: 0 auto;
+        }
+        
+        .letter {
+            /* Use container-based sizing instead of viewport units */
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            transition: color 0.3s ease;
+            /* Scale font size based on container size */
+            font-size: min(calc(90vw / 20), calc(90vh / 20));
+        }
+        
+        .letter.active {
+            color: #ffff00;
+            text-shadow: 0 0 5px #ffff00;
+        }
+        
+        .letter.was-active {
+            color: #ffff00;
+            text-shadow: 0 0 5px #ffff00;
+        }
+        
+        .time-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #666;
+            font-size: calc(min(90vw, 90vh) / 40);
+            line-height: 1.4;
+            width: 100%;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .clock-container {
+                padding: 15px;
+                width: 95vw;
+                height: 95vw;
+            }
+            
+            .grid {
+                gap: 2px;
+            }
+            
+            .letter {
+                font-size: min(calc(95vw / 18), calc(95vh / 18));
+            }
+            
+            .time-info {
+                font-size: calc(95vw / 35);
+                margin-top: 10px;
+            }
+        }
+        
+        /* Large screen optimizations */
+        @media (min-width: 1200px) {
+            .letter {
+                font-size: min(calc(90vw / 18), calc(90vh / 18));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="grid" id="clockGrid"></div>
+        <div class="time-info" id="timeInfo"></div>
+    </div>
+
+    <script>
+        const GRID = "SHETVISOWASOPRECIESQVIJFTIENKPFKWARTTSVOORSOVERAHALFSMIDDERTVIJFATWEESOEEENOXVIERELFTIENKTWAALFBHDRIECNEGENANACHTFZESSENZEVENSNOENVUQUOTEUURFRTT";
+        
+        // Convert linear string to 12x12 grid
+        const gridTemplate = [];
+        for (let i = 0; i < 12; i++) {
+            const row = [];
+            for (let j = 0; j < 12; j++) {
+                row.push(GRID[i * 12 + j]);
+            }
+            gridTemplate.push(row);
+        }
+        
+        // Word positions converted to grid coordinates (row, col, length, direction)
+        const wordPositions = {
+            'HET': [[0, 1, 3, 'h']],      // positions 1-3
+            'IS': [[0, 5, 2, 'h']],       // positions 5-6
+            'WAS': [[0, 8, 3, 'h']],      // positions 8-10
+            'MVIJF': [[1, 8, 4, 'h']],    // positions 20-23 (minute vijf)
+            'PRECIES': [[1, 0, 7, 'h']],  // positions 12-18
+            'MTIEN': [[1, 12, 4, 'h']],   // positions 24-27 (minute tien)
+            'MTIEN': [[2, 0, 4, 'h']],    // positions 24-27 (minute tien)
+            'KWART': [[2, 7, 5, 'h']],    // positions 31-35
+            'VOOR': [[3, 2, 4, 'h']],     // positions 38-41
+            'OVER': [[3, 7, 4, 'h']],     // positions 43-46
+            'HALF': [[4, 0, 4, 'h']],     // positions 48-51
+            'MIDDER': [[4, 5, 6, 'h']],   // positions 53-58
+            'VIJF': [[5, 0, 4, 'h']],     // positions 60-63 (hour vijf)
+            'TWEE': [[5, 5, 4, 'h']],     // positions 65-68
+            'EEN': [[6, 0, 3, 'h']],      // positions 72-74
+            'VIER': [[6, 5, 4, 'h']],     // positions 77-80
+            'ELF': [[6, 9, 3, 'h']],      // positions 81-83
+            'TIEN': [[7, 0, 4, 'h']],     // positions 84-87 (hour tien)
+            'TWAALF': [[7, 5, 6, 'h']],   // positions 89-94
+            'DRIE': [[8, 1, 4, 'h']],     // positions 97-100
+            'NEGEN': [[8, 6, 5, 'h']],    // positions 102-106
+            'ACHT': [[9, 1, 4, 'h']],     // positions 109-112
+            'ZES': [[9, 6, 3, 'h']],      // positions 114-116
+            'ZEVEN': [[10, 0, 5, 'h']],   // positions 120-124
+            'NOEN': [[10, 6, 4, 'h']],    // positions 126-129
+            'UUR': [[11, 5, 3, 'h']]      // positions 137-139
+        };
+
+        function createGrid() {
+            const grid = document.getElementById('clockGrid');
+            grid.innerHTML = '';
+            
+            for (let row = 0; row < 12; row++) {
+                for (let col = 0; col < 12; col++) {
+                    const letter = document.createElement('div');
+                    letter.className = 'letter';
+                    letter.textContent = gridTemplate[row][col];
+                    letter.id = `letter-${row}-${col}`;
+                    grid.appendChild(letter);
+                }
+            }
+        }
+
+        function clearAllLetters() {
+            for (let row = 0; row < 12; row++) {
+                for (let col = 0; col < 12; col++) {
+                    const letter = document.getElementById(`letter-${row}-${col}`);
+                    if (letter) {
+                        letter.classList.remove('active', 'was-active');
+                    }
+                }
+                }
+        }
+
+        function lightUpWord(wordKey, useWasColor = false) {
+            if (wordPositions[wordKey]) {
+                wordPositions[wordKey].forEach(([row, col, length, direction]) => {
+                    for (let i = 0; i < length; i++) {
+                        const targetRow = direction === 'h' ? row : row + i;
+                        const targetCol = direction === 'h' ? col + i : col;
+                        const letter = document.getElementById(`letter-${targetRow}-${targetCol}`);
+                        if (letter) {
+                            letter.classList.add(useWasColor ? 'was-active' : 'active');
+                        }
+                    }
+                });
+            }
+        }
+
+        function getHourWord(hour) {
+            const hourWords = {
+                0: 'TWAALF', 1: 'EEN', 2: 'TWEE', 3: 'DRIE', 4: 'VIER', 5: 'VIJF',
+                6: 'ZES', 7: 'ZEVEN', 8: 'ACHT', 9: 'NEGEN', 10: 'TIEN', 11: 'ELF', 12: 'TWAALF'
+            };
+            return hourWords[hour % 12];
+        }
+
+        function shouldUseWasSimple(minutes) {
+            // Nieuw patroon:
+            // IS: 4,5,6, 9,10,11, 14,15,16, 19,20,21, 24,25,26, 29,30,31, etc.
+            // WAS: 2,3, 7,8, 12,13, 17,18, 22,23, 27,28, 32,33, etc.
+            
+            // Patroon herhaalt elke 10 minuten: 
+            // 0,1: geen actie, 2,3: WAS, 4,5,6: IS, 7,8: WAS, 9,10,11: IS (maar 11 wordt 1 van volgende cyclus)
+            const cycle = minutes % 10;
+            
+            if (cycle === 2 || cycle === 3 || cycle === 7 || cycle === 8) {
+                return true; // WAS
+            } else if (cycle === 4 || cycle === 5 || cycle === 6 || cycle === 9) {
+                return false; // IS
+            } else if (cycle === 0 || cycle === 1) {
+                // Kijk naar vorige cyclus voor 10,11 -> deze zijn IS (als onderdeel van 9,10,11)
+                return false; // IS voor minuten 10,11 (onderdeel van 9,10,11 groep)
+            }
+            
+            return false; // default IS
+        }
+
+        function displayTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            
+            clearAllLetters();
+            
+            // Bepaal of we IS of WAS gebruiken
+            const useWas = shouldUseWasSimple(minutes);
+            
+            // Altijd "HET" tonen
+            lightUpWord('HET');
+            
+            // PRECIES op elke 5 minuten
+            if (minutes % 30 === 0) {
+                lightUpWord('PRECIES', useWas);
+            }
+            
+            // IS of WAS tonen op basis van de minuut
+            if (useWas) {
+                lightUpWord('WAS', true);
+            } else {
+                lightUpWord('IS');
+            }
+            
+            let displayHour = hours % 12;
+            let timeText = useWas ? "Het was " : "Het is ";
+            
+            // Minuten logica (ongewijzigd)
+            if (minutes >= 0 && minutes < 5) {
+                // Precies het uur
+                lightUpWord(getHourWord(displayHour), useWas);
+                lightUpWord('UUR', useWas);
+                timeText += getHourWord(displayHour).toLowerCase() + " uur";
+            } else if (minutes >= 5 && minutes < 10) {
+                // Vijf over
+                lightUpWord('MVIJF', useWas);
+                lightUpWord('OVER', useWas);
+                lightUpWord(getHourWord(displayHour), useWas);
+                timeText += "vijf over " + getHourWord(displayHour).toLowerCase();
+            } else if (minutes >= 10 && minutes < 15) {
+                // Tien over
+                lightUpWord('MTIEN', useWas);
+                lightUpWord('OVER', useWas);
+                lightUpWord(getHourWord(displayHour), useWas);
+                timeText += "tien over " + getHourWord(displayHour).toLowerCase();
+            } else if (minutes >= 15 && minutes < 20) {
+                // Kwart over
+                lightUpWord('KWART', useWas);
+                lightUpWord('OVER', useWas);
+                lightUpWord(getHourWord(displayHour), useWas);
+                timeText += "kwart over " + getHourWord(displayHour).toLowerCase();
+            } else if (minutes >= 20 && minutes < 25) {
+                // Tien voor half
+                lightUpWord('MTIEN', useWas);
+                lightUpWord('VOOR', useWas);
+                lightUpWord('HALF', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "tien voor half " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 25 && minutes < 30) {
+                // Vijf voor half
+                lightUpWord('MVIJF', useWas);
+                lightUpWord('VOOR', useWas);
+                lightUpWord('HALF', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "vijf voor half " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 30 && minutes < 35) {
+                // Half
+                lightUpWord('HALF', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "half " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 35 && minutes < 40) {
+                // Vijf over half
+                lightUpWord('MVIJF', useWas);
+                lightUpWord('OVER', useWas);
+                lightUpWord('HALF', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "vijf over half " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 40 && minutes < 45) {
+                // Tien over half
+                lightUpWord('MTIEN', useWas);
+                lightUpWord('OVER', useWas);
+                lightUpWord('HALF', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "tien over half " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 45 && minutes < 50) {
+                // Kwart voor
+                lightUpWord('KWART', useWas);
+                lightUpWord('VOOR', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "kwart voor " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 50 && minutes < 55) {
+                // Tien voor
+                lightUpWord('MTIEN', useWas);
+                lightUpWord('VOOR', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "tien voor " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes >= 55 && minutes < 59) {
+                // Vijf voor
+                lightUpWord('MVIJF', useWas);
+                lightUpWord('VOOR', useWas);
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                timeText += "vijf voor " + getHourWord(displayHour + 1).toLowerCase();
+            } else if (minutes === 59) {
+                // IS Heel uur
+                lightUpWord(getHourWord(displayHour + 1), useWas);
+                lightUpWord('UUR', useWas);
+                timeText += getHourWord(displayHour).toLowerCase() + " uur";	
+            }
+            
+            // Update time info
+            document.getElementById('timeInfo').textContent = 
+                now.toLocaleTimeString('nl-NL') 
+             // + ' ' + timeText;
+        }
+
+        // Initialize
+        createGrid();
+        displayTime();
+        
+        // Update every second
+        setInterval(displayTime, 1000);
+    </script>
+</body>
+</html>

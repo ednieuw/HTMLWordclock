@@ -135,7 +135,6 @@
         }
         
         // Word positions converted to grid coordinates (row, col, length, direction)
-
         const wordPositions = {
             'HET': [[0, 1, 3, 'h']],      // positions 1-3
             'IS': [[0, 5, 2, 'h']],       // positions 5-6
@@ -164,7 +163,6 @@
             'NOEN': [[10, 6, 4, 'h']],    // positions 126-129
             'UUR': [[11, 5, 3, 'h']]      // positions 137-139
         };
-
 
 
         function createGrid() {
@@ -238,7 +236,7 @@
         }
 
         function displayTime() {
-            const now = new Date();
+            const now = simulatedTime; //new Date();
             const hours = now.getHours();
             const minutes = now.getMinutes();
             
@@ -353,12 +351,20 @@
              // + ' ' + timeText;
         }
 
-        // Initialize
-        createGrid();
-        displayTime();
         
-        // Update every second
-        setInterval(displayTime, 1000);
+// Simulatie: starttijd 15:00 op fictieve dag
+let simulatedTime = new Date(2025, 0, 1, 22, 0, 0); // 1 januari 2025, 15:00
+
+// Initialize
+createGrid();
+displayTime();
+
+// Update elke seconde (versneld: 1 minuut per seconde)
+setInterval(() => {
+    displayTime();
+    simulatedTime.setMinutes(simulatedTime.getMinutes() + 1);
+}, 300);
+    
     </script>
 </body>
 </html>

@@ -236,7 +236,8 @@
         }
 
         function displayTime() {
-            const now = simulatedTime; //new Date();
+ //           const now = simulatedTime; //new Date();
+            const now = new Date();			
             const hours = now.getHours();
             const minutes = now.getMinutes();
             
@@ -263,82 +264,83 @@
             let displayHour = hours % 12;
             let timeText = useWas ? "Het was " : "Het is ";
             
-            // Minuten logica (ongewijzigd)
-            if (minutes >= 0 && minutes < 5) {
+            // Minuten logica 
+
+            if (minutes >= 0 && minutes < 4) {
                 // Precies het uur
                 lightUpWord(getHourWord(displayHour), useWas);
                 lightUpWord('UUR', useWas);
                 timeText += getHourWord(displayHour).toLowerCase() + " uur";
-            } else if (minutes >= 5 && minutes < 10) {
+            } else if (minutes >= 4 && minutes < 9) {
                 // Vijf over
                 lightUpWord('MVIJF', useWas);
                 lightUpWord('OVER', useWas);
                 lightUpWord(getHourWord(displayHour), useWas);
                 timeText += "vijf over " + getHourWord(displayHour).toLowerCase();
-            } else if (minutes >= 10 && minutes < 15) {
+            } else if (minutes >= 9 && minutes < 14) {
                 // Tien over
                 lightUpWord('MTIEN', useWas);
                 lightUpWord('OVER', useWas);
                 lightUpWord(getHourWord(displayHour), useWas);
                 timeText += "tien over " + getHourWord(displayHour).toLowerCase();
-            } else if (minutes >= 15 && minutes < 20) {
+            } else if (minutes >= 14 && minutes < 19) {
                 // Kwart over
                 lightUpWord('KWART', useWas);
                 lightUpWord('OVER', useWas);
                 lightUpWord(getHourWord(displayHour), useWas);
                 timeText += "kwart over " + getHourWord(displayHour).toLowerCase();
-            } else if (minutes >= 20 && minutes < 25) {
+            } else if (minutes >= 19 && minutes < 24) {
                 // Tien voor half
                 lightUpWord('MTIEN', useWas);
                 lightUpWord('VOOR', useWas);
                 lightUpWord('HALF', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "tien voor half " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 25 && minutes < 30) {
+            } else if (minutes >= 24 && minutes < 29) {
                 // Vijf voor half
                 lightUpWord('MVIJF', useWas);
                 lightUpWord('VOOR', useWas);
                 lightUpWord('HALF', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "vijf voor half " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 30 && minutes < 35) {
+            } else if (minutes >= 29 && minutes < 34) {
                 // Half
                 lightUpWord('HALF', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "half " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 35 && minutes < 40) {
+            } else if (minutes >= 34 && minutes < 39) {
                 // Vijf over half
                 lightUpWord('MVIJF', useWas);
                 lightUpWord('OVER', useWas);
                 lightUpWord('HALF', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "vijf over half " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 40 && minutes < 45) {
+            } else if (minutes >= 39 && minutes < 44) {
                 // Tien over half
                 lightUpWord('MTIEN', useWas);
                 lightUpWord('OVER', useWas);
                 lightUpWord('HALF', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "tien over half " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 45 && minutes < 50) {
+            } else if (minutes >= 44 && minutes < 49) {
                 // Kwart voor
                 lightUpWord('KWART', useWas);
                 lightUpWord('VOOR', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "kwart voor " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 50 && minutes < 55) {
+            } else if (minutes >= 49 && minutes < 54) {
                 // Tien voor
                 lightUpWord('MTIEN', useWas);
                 lightUpWord('VOOR', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "tien voor " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes >= 55 && minutes < 59) {
+            } else if (minutes >= 54 && minutes < 58) {
                 // Vijf voor
                 lightUpWord('MVIJF', useWas);
                 lightUpWord('VOOR', useWas);
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 timeText += "vijf voor " + getHourWord(displayHour + 1).toLowerCase();
-            } else if (minutes === 59) {
+            } else if (minutes >=58) {
                 // IS Heel uur
                 lightUpWord(getHourWord(displayHour + 1), useWas);
                 lightUpWord('UUR', useWas);
@@ -353,18 +355,22 @@
 
         
 // Simulatie: starttijd 15:00 op fictieve dag
-let simulatedTime = new Date(2025, 0, 1, 22, 0, 0); // 1 januari 2025, 15:00
+let simulatedTime = new Date(2025, 6, 25, 15, 0, 0); // 25 juni 2025, 15:00
 
 // Initialize
 createGrid();
 displayTime();
 
-// Update elke seconde (versneld: 1 minuut per seconde)
+// Update every second
+setInterval(displayTime, 1000);
+
+/*
+// Update elke seconde (versneld: 1 minuut per 2 seconde)
 setInterval(() => {
     displayTime();
     simulatedTime.setMinutes(simulatedTime.getMinutes() + 1);
-}, 300);
-    
+}, 2000);
+  */  
     </script>
 </body>
 </html>
